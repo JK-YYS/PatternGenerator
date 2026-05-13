@@ -1,0 +1,29 @@
+{
+  "name": "bmp-grayscale-zone-generator",
+  "version": "1.0.0",
+  "description": "BMP grayscale zone and H pattern generator.",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win portable",
+    "push": "powershell -ExecutionPolicy Bypass -File scripts/push.ps1"
+  },
+  "build": {
+    "appId": "com.local.bmpgrayscalezonegenerator",
+    "productName": "BMP Grayscale Zone Generator",
+    "files": [
+      "index.html",
+      "main.js",
+      "preload.js"
+    ],
+    "win": {
+      "target": [
+        "portable"
+      ]
+    }
+  },
+  "devDependencies": {
+    "electron": "^33.4.11",
+    "electron-builder": "^25.1.8"
+  }
+}

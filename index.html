@@ -1,0 +1,832 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BMP 灰階分區產生器</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f6f7f9;
+      --panel: #ffffff;
+      --text: #1c2430;
+      --muted: #647084;
+      --line: #d9dee7;
+      --accent: #0f766e;
+      --accent-dark: #115e59;
+      --danger: #b42318;
+      --shadow: 0 14px 34px rgba(28, 36, 48, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Segoe UI", "Microsoft JhengHei", system-ui, sans-serif;
+      color: var(--text);
+      background: var(--bg);
+    }
+
+    button,
+    input,
+    select {
+      font: inherit;
+    }
+
+    .app {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: minmax(360px, 440px) minmax(0, 1fr);
+    }
+
+    .sidebar {
+      background: var(--panel);
+      border-right: 1px solid var(--line);
+      padding: 24px;
+      overflow: auto;
+    }
+
+    .workspace {
+      min-width: 0;
+      display: grid;
+      grid-template-rows: auto 1fr;
+      gap: 16px;
+      padding: 24px;
+    }
+
+    h1 {
+      margin: 0 0 6px;
+      font-size: 24px;
+      letter-spacing: 0;
+    }
+
+    .subtext {
+      margin: 0 0 24px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .section {
+      border-top: 1px solid var(--line);
+      padding-top: 18px;
+      margin-top: 18px;
+    }
+
+    .section-title {
+      margin: 0 0 12px;
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    label {
+      display: grid;
+      gap: 6px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    input,
+    select {
+      width: 100%;
+      min-height: 40px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 8px 10px;
+      color: var(--text);
+      background: #fff;
+      outline: none;
+    }
+
+    input:focus,
+    select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.12);
+    }
+
+    .groups {
+      display: grid;
+      gap: 10px;
+    }
+
+    .group-row {
+      display: grid;
+      grid-template-columns: 48px 1fr 1fr;
+      gap: 10px;
+      align-items: end;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfcfd;
+    }
+
+    .badge {
+      align-self: stretch;
+      display: grid;
+      place-items: center;
+      min-height: 40px;
+      border-radius: 6px;
+      color: #fff;
+      background: var(--accent);
+      font-weight: 700;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .pattern-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+    }
+
+    .pattern-grid button {
+      min-height: 38px;
+      padding: 8px;
+    }
+
+    .pattern-grid button.active {
+      color: #fff;
+      background: var(--accent);
+    }
+
+    .hint {
+      margin: 10px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    button {
+      min-height: 42px;
+      border: 0;
+      border-radius: 8px;
+      padding: 10px 14px;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .primary {
+      color: #fff;
+      background: var(--accent);
+    }
+
+    .primary:hover {
+      background: var(--accent-dark);
+    }
+
+    .secondary {
+      color: var(--text);
+      background: #e9edf3;
+    }
+
+    .secondary:hover {
+      background: #dfe5ee;
+    }
+
+    .status {
+      min-height: 22px;
+      margin-top: 12px;
+      color: var(--muted);
+      line-height: 1.45;
+      font-size: 13px;
+    }
+
+    .status.error {
+      color: var(--danger);
+      font-weight: 700;
+    }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(130px, 1fr));
+      gap: 12px;
+    }
+
+    .metric {
+      min-height: 76px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+    }
+
+    .metric span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .metric strong {
+      display: block;
+      margin-top: 8px;
+      font-size: 20px;
+    }
+
+    .preview-panel {
+      min-height: 0;
+      display: grid;
+      grid-template-rows: auto 1fr;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .preview-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .preview-title {
+      margin: 0;
+      font-size: 16px;
+    }
+
+    .preview-note {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .canvas-wrap {
+      min-height: 0;
+      padding: 18px;
+      overflow: auto;
+      background:
+        linear-gradient(45deg, #eef1f5 25%, transparent 25%),
+        linear-gradient(-45deg, #eef1f5 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #eef1f5 75%),
+        linear-gradient(-45deg, transparent 75%, #eef1f5 75%);
+      background-color: #fff;
+      background-size: 20px 20px;
+      background-position: 0 0, 0 10px, 10px -10px, -10px 0;
+    }
+
+    canvas {
+      display: block;
+      max-width: 100%;
+      height: auto;
+      image-rendering: pixelated;
+      border: 1px solid #9aa4b2;
+      background: #fff;
+    }
+
+    @media (max-width: 920px) {
+      .app {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .summary {
+        grid-template-columns: repeat(2, minmax(130px, 1fr));
+      }
+    }
+
+    @media (max-width: 560px) {
+      .sidebar,
+      .workspace {
+        padding: 16px;
+      }
+
+      .grid,
+      .group-row,
+      .summary {
+        grid-template-columns: 1fr;
+      }
+
+      .badge {
+        min-height: 34px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <aside class="sidebar">
+      <h1>BMP 灰階分區產生器</h1>
+      <p class="subtext">設定影像尺寸與最多 10 組 line 分區，預覽後可另存為 BMP。</p>
+
+      <div class="section">
+        <h2 class="section-title">影像設定</h2>
+        <div class="grid">
+          <label>
+            高度
+            <input id="heightInput" type="number" min="1" max="20000" step="1" value="2400">
+          </label>
+          <label>
+            寬度
+            <input id="widthInput" type="number" min="1" max="20000" step="1" value="1200">
+          </label>
+        </div>
+        <div class="grid" style="margin-top: 12px;">
+          <label>
+            分區組數
+            <select id="groupCount"></select>
+          </label>
+          <label>
+            檔名
+            <input id="fileName" type="text" value="grayscale-zones.bmp" maxlength="80">
+          </label>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2 class="section-title">分區參數</h2>
+        <div id="groups" class="groups"></div>
+      </div>
+
+      <div class="section">
+        <h2 class="section-title">H Pattern 快捷鍵</h2>
+        <div id="patternButtons" class="pattern-grid"></div>
+        <p class="hint">按鍵盤 1-9 或 0 可快速套用 1H-10H；輸入欄位聚焦時不會觸發。</p>
+      </div>
+
+      <div class="actions">
+        <button id="renderBtn" class="secondary" type="button">更新預覽</button>
+        <button id="saveSettingsBtn" class="secondary" type="button">儲存設定</button>
+        <button id="exportSettingsBtn" class="secondary" type="button">匯出設定</button>
+        <button id="importSettingsBtn" class="secondary" type="button">匯入設定</button>
+        <button id="clearPatternBtn" class="secondary" type="button">分區模式</button>
+        <button id="saveBtn" class="primary" type="button">另存 BMP</button>
+        <input id="importSettingsInput" type="file" accept="application/json,.json" hidden>
+      </div>
+      <div id="status" class="status"></div>
+    </aside>
+
+    <section class="workspace">
+      <div class="summary">
+        <div class="metric"><span>Line 範圍</span><strong id="lineRange">0 - 2399</strong></div>
+        <div class="metric"><span>X 範圍</span><strong id="xRange">0 - 1199</strong></div>
+        <div class="metric"><span>已覆蓋 Lines</span><strong id="coveredLines">0</strong></div>
+        <div class="metric"><span>輸出大小</span><strong id="outputSize">-</strong></div>
+      </div>
+
+      <div class="preview-panel">
+        <div class="preview-head">
+          <h2 class="preview-title">預覽</h2>
+          <span class="preview-note">縮放顯示，輸出會使用完整解析度</span>
+        </div>
+        <div class="canvas-wrap">
+          <canvas id="previewCanvas" width="1200" height="2400"></canvas>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const heightInput = document.getElementById("heightInput");
+    const widthInput = document.getElementById("widthInput");
+    const groupCount = document.getElementById("groupCount");
+    const groupsEl = document.getElementById("groups");
+    const patternButtons = document.getElementById("patternButtons");
+    const renderBtn = document.getElementById("renderBtn");
+    const saveBtn = document.getElementById("saveBtn");
+    const saveSettingsBtn = document.getElementById("saveSettingsBtn");
+    const exportSettingsBtn = document.getElementById("exportSettingsBtn");
+    const importSettingsBtn = document.getElementById("importSettingsBtn");
+    const importSettingsInput = document.getElementById("importSettingsInput");
+    const clearPatternBtn = document.getElementById("clearPatternBtn");
+    const statusEl = document.getElementById("status");
+    const fileNameInput = document.getElementById("fileName");
+    const canvas = document.getElementById("previewCanvas");
+    const ctx = canvas.getContext("2d", { willReadFrequently: false });
+
+    const lineRangeEl = document.getElementById("lineRange");
+    const xRangeEl = document.getElementById("xRange");
+    const coveredLinesEl = document.getElementById("coveredLines");
+    const outputSizeEl = document.getElementById("outputSize");
+
+    let lastImageData = null;
+    let lastConfig = null;
+    let activePatternH = null;
+    const settingsKey = "bmp-grayscale-zone-settings-v2";
+
+    for (let i = 1; i <= 10; i += 1) {
+      const option = document.createElement("option");
+      option.value = String(i);
+      option.textContent = `${i} 組`;
+      groupCount.appendChild(option);
+    }
+    groupCount.value = "3";
+
+    for (let i = 1; i <= 10; i += 1) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "secondary";
+      button.textContent = `${i}H`;
+      button.title = `${i} 行黑、${i} 行白重複`;
+      button.dataset.h = String(i);
+      patternButtons.appendChild(button);
+    }
+
+    function clampInt(value, min, max, fallback) {
+      const parsed = Number.parseInt(value, 10);
+      if (!Number.isFinite(parsed)) return fallback;
+      return Math.min(max, Math.max(min, parsed));
+    }
+
+    function makeGroupRows() {
+      const existing = readGroups(false);
+      const count = clampInt(groupCount.value, 1, 10, 1);
+      groupsEl.innerHTML = "";
+
+      for (let index = 0; index < count; index += 1) {
+        const saved = existing[index] || {};
+        const row = document.createElement("div");
+        row.className = "group-row";
+        row.innerHTML = `
+          <div class="badge">${index + 1}</div>
+          <label>
+            灰階
+            <input class="gray-input" type="number" min="0" max="255" step="1" value="${saved.gray ?? defaultGray(index, count)}">
+          </label>
+          <label>
+            Step
+            <input class="step-input" type="number" min="1" step="1" value="${saved.step ?? defaultStep(index, count)}">
+          </label>
+        `;
+        groupsEl.appendChild(row);
+      }
+    }
+
+    function defaultGray(index, count) {
+      if (count === 1) return 128;
+      return Math.round((255 * index) / (count - 1));
+    }
+
+    function defaultStep(index, count) {
+      const height = clampInt(heightInput.value, 1, 20000, 2400);
+      const base = Math.floor(height / count);
+      const remainder = height % count;
+      return base + (index < remainder ? 1 : 0);
+    }
+
+    function readGroups(normalize = true) {
+      const grayInputs = Array.from(document.querySelectorAll(".gray-input"));
+      const stepInputs = Array.from(document.querySelectorAll(".step-input"));
+      return grayInputs.map((input, index) => ({
+        gray: normalize ? clampInt(input.value, 0, 255, 0) : input.value,
+        step: normalize ? clampInt(stepInputs[index].value, 1, 20000, 1) : stepInputs[index].value
+      }));
+    }
+
+    function readSettings() {
+      return {
+        height: clampInt(heightInput.value, 1, 20000, 2400),
+        width: clampInt(widthInput.value, 1, 20000, 1200),
+        groupCount: clampInt(groupCount.value, 1, 10, 1),
+        fileName: fileNameInput.value,
+        activePatternH,
+        groups: readGroups(true)
+      };
+    }
+
+    function applySettings(settings) {
+      if (!settings || typeof settings !== "object") return;
+      heightInput.value = String(clampInt(settings.height, 1, 20000, 2400));
+      widthInput.value = String(clampInt(settings.width, 1, 20000, 1200));
+      groupCount.value = String(clampInt(settings.groupCount, 1, 10, 1));
+      fileNameInput.value = typeof settings.fileName === "string" ? settings.fileName : "grayscale-zones.bmp";
+      activePatternH = settings.activePatternH === null || settings.activePatternH === undefined
+        ? null
+        : clampInt(settings.activePatternH, 1, 10, 1);
+      makeGroupRows();
+
+      if (Array.isArray(settings.groups)) {
+        const grayInputs = Array.from(document.querySelectorAll(".gray-input"));
+        const stepInputs = Array.from(document.querySelectorAll(".step-input"));
+        settings.groups.slice(0, grayInputs.length).forEach((group, index) => {
+          grayInputs[index].value = String(clampInt(group.gray, 0, 255, 0));
+          stepInputs[index].value = String(clampInt(group.step, 1, 20000, 1));
+        });
+      }
+
+      renderPreview();
+    }
+
+    function saveSettings(showMessage = true) {
+      localStorage.setItem(settingsKey, JSON.stringify(readSettings()));
+      if (showMessage) {
+        statusEl.textContent = "設定已儲存在此電腦。";
+        statusEl.classList.remove("error");
+      }
+    }
+
+    function loadSavedSettings() {
+      const saved = localStorage.getItem(settingsKey);
+      if (!saved) return false;
+      try {
+        applySettings(JSON.parse(saved));
+        statusEl.textContent = "已載入上次儲存的設定。";
+        statusEl.classList.remove("error");
+        return true;
+      } catch {
+        localStorage.removeItem(settingsKey);
+        return false;
+      }
+    }
+
+    function exportSettings() {
+      const blob = new Blob([JSON.stringify(readSettings(), null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "bmp-grayscale-settings.json";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      statusEl.textContent = "設定檔已匯出。";
+      statusEl.classList.remove("error");
+    }
+
+    function importSettings(file) {
+      if (!file) return;
+      const reader = new FileReader();
+      reader.addEventListener("load", () => {
+        try {
+          applySettings(JSON.parse(String(reader.result)));
+          saveSettings(false);
+          statusEl.textContent = "設定檔已匯入並儲存。";
+          statusEl.classList.remove("error");
+        } catch {
+          statusEl.textContent = "設定檔格式無法讀取。";
+          statusEl.classList.add("error");
+        }
+      });
+      reader.readAsText(file);
+    }
+
+    function validateConfig() {
+      const height = clampInt(heightInput.value, 1, 20000, 2400);
+      const width = clampInt(widthInput.value, 1, 20000, 1200);
+      const groups = readGroups(true);
+      const totalStep = activePatternH ? height : groups.reduce((sum, group) => sum + group.step, 0);
+
+      heightInput.value = String(height);
+      widthInput.value = String(width);
+      groups.forEach((group, index) => {
+        document.querySelectorAll(".gray-input")[index].value = String(group.gray);
+        document.querySelectorAll(".step-input")[index].value = String(group.step);
+      });
+
+      if (totalStep > height) {
+        return {
+          ok: false,
+          message: `Step 總和 ${totalStep} 超過高度 ${height}。`,
+          height,
+          width,
+          groups,
+          activePatternH,
+          totalStep
+        };
+      }
+
+      return {
+        ok: true,
+        height,
+        width,
+        groups,
+        activePatternH,
+        totalStep
+      };
+    }
+
+    function updateMetrics(config) {
+      const height = config?.height || clampInt(heightInput.value, 1, 20000, 2400);
+      const width = config?.width || clampInt(widthInput.value, 1, 20000, 1200);
+      const totalStep = config?.totalStep || 0;
+      const rowSize = Math.floor((24 * width + 31) / 32) * 4;
+      const fileSize = 54 + rowSize * height;
+
+      lineRangeEl.textContent = `0 - ${height - 1}`;
+      xRangeEl.textContent = `0 - ${width - 1}`;
+      coveredLinesEl.textContent = `${totalStep} / ${height}`;
+      outputSizeEl.textContent = formatBytes(fileSize);
+    }
+
+    function renderPreview() {
+      const config = validateConfig();
+      updateMetrics(config);
+      syncPatternButtons();
+
+      if (!config.ok) {
+        statusEl.textContent = config.message;
+        statusEl.classList.add("error");
+        return false;
+      }
+
+      const { width, height, groups } = config;
+      canvas.width = width;
+      canvas.height = height;
+      const imageData = ctx.createImageData(width, height);
+      const pixels = imageData.data;
+      let line = 0;
+
+      if (activePatternH) {
+        for (; line < height; line += 1) {
+          const gray = Math.floor(line / activePatternH) % 2 === 0 ? 0 : 255;
+          const rowOffset = line * width * 4;
+          for (let x = 0; x < width; x += 1) {
+            const offset = rowOffset + x * 4;
+            pixels[offset] = gray;
+            pixels[offset + 1] = gray;
+            pixels[offset + 2] = gray;
+            pixels[offset + 3] = 255;
+          }
+        }
+      } else {
+        for (const group of groups) {
+          const end = Math.min(height, line + group.step);
+          for (; line < end; line += 1) {
+            const rowOffset = line * width * 4;
+            for (let x = 0; x < width; x += 1) {
+              const offset = rowOffset + x * 4;
+              pixels[offset] = group.gray;
+              pixels[offset + 1] = group.gray;
+              pixels[offset + 2] = group.gray;
+              pixels[offset + 3] = 255;
+            }
+          }
+        }
+
+        for (; line < height; line += 1) {
+          const rowOffset = line * width * 4;
+          for (let x = 0; x < width; x += 1) {
+            const offset = rowOffset + x * 4;
+            pixels[offset] = 255;
+            pixels[offset + 1] = 255;
+            pixels[offset + 2] = 255;
+            pixels[offset + 3] = 255;
+          }
+        }
+      }
+
+      ctx.putImageData(imageData, 0, 0);
+      lastImageData = imageData;
+      lastConfig = config;
+      statusEl.textContent = activePatternH
+        ? `預覽已更新：${activePatternH}H pattern。`
+        : "預覽已更新。未覆蓋的 line 會以白色輸出。";
+      statusEl.classList.remove("error");
+      return true;
+    }
+
+    function applyPattern(h) {
+      activePatternH = clampInt(h, 1, 10, 1);
+      renderPreview();
+      saveSettings(false);
+    }
+
+    function clearPattern() {
+      activePatternH = null;
+      renderPreview();
+      saveSettings(false);
+    }
+
+    function syncPatternButtons() {
+      document.querySelectorAll("#patternButtons button").forEach((button) => {
+        button.classList.toggle("active", Number(button.dataset.h) === activePatternH);
+      });
+    }
+
+    function createBmpBlob(imageData, width, height) {
+      const rowSize = Math.floor((24 * width + 31) / 32) * 4;
+      const pixelArraySize = rowSize * height;
+      const fileSize = 54 + pixelArraySize;
+      const buffer = new ArrayBuffer(fileSize);
+      const view = new DataView(buffer);
+      const bytes = new Uint8Array(buffer);
+
+      bytes[0] = 0x42;
+      bytes[1] = 0x4d;
+      view.setUint32(2, fileSize, true);
+      view.setUint32(10, 54, true);
+      view.setUint32(14, 40, true);
+      view.setInt32(18, width, true);
+      view.setInt32(22, height, true);
+      view.setUint16(26, 1, true);
+      view.setUint16(28, 24, true);
+      view.setUint32(34, pixelArraySize, true);
+      view.setInt32(38, 2835, true);
+      view.setInt32(42, 2835, true);
+
+      const source = imageData.data;
+      let targetOffset = 54;
+
+      for (let y = height - 1; y >= 0; y -= 1) {
+        const rowStart = y * width * 4;
+        for (let x = 0; x < width; x += 1) {
+          const sourceOffset = rowStart + x * 4;
+          bytes[targetOffset] = source[sourceOffset + 2];
+          bytes[targetOffset + 1] = source[sourceOffset + 1];
+          bytes[targetOffset + 2] = source[sourceOffset];
+          targetOffset += 3;
+        }
+        targetOffset = 54 + (height - y) * rowSize;
+      }
+
+      return new Blob([buffer], { type: "image/bmp" });
+    }
+
+    async function saveBmp() {
+      if (!renderPreview()) return;
+      const { width, height } = lastConfig;
+      const blob = createBmpBlob(lastImageData, width, height);
+      const name = normalizeFileName(fileNameInput.value);
+      if (window.bmpApp?.saveBmpFile) {
+        const result = await window.bmpApp.saveBmpFile(name, await blob.arrayBuffer());
+        statusEl.textContent = result.canceled ? "已取消另存 BMP。" : `已建立 ${result.filePath}。`;
+        return;
+      }
+
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = name;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      statusEl.textContent = `已建立 ${name}。`;
+    }
+
+    function normalizeFileName(value) {
+      const cleaned = value.trim().replace(/[\\/:*?"<>|]+/g, "_") || "grayscale-zones.bmp";
+      return cleaned.toLowerCase().endsWith(".bmp") ? cleaned : `${cleaned}.bmp`;
+    }
+
+    function formatBytes(bytes) {
+      if (bytes < 1024) return `${bytes} B`;
+      if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+      return `${(bytes / 1024 / 1024).toFixed(2)} MB`;
+    }
+
+    groupCount.addEventListener("change", () => {
+      activePatternH = null;
+      makeGroupRows();
+      renderPreview();
+    });
+    heightInput.addEventListener("change", () => {
+      makeGroupRows();
+      renderPreview();
+    });
+    widthInput.addEventListener("change", renderPreview);
+    groupsEl.addEventListener("input", renderPreview);
+    patternButtons.addEventListener("click", (event) => {
+      const button = event.target.closest("button[data-h]");
+      if (button) applyPattern(button.dataset.h);
+    });
+    renderBtn.addEventListener("click", renderPreview);
+    saveBtn.addEventListener("click", saveBmp);
+    saveSettingsBtn.addEventListener("click", () => saveSettings(true));
+    exportSettingsBtn.addEventListener("click", exportSettings);
+    importSettingsBtn.addEventListener("click", () => importSettingsInput.click());
+    clearPatternBtn.addEventListener("click", clearPattern);
+    importSettingsInput.addEventListener("change", () => {
+      importSettings(importSettingsInput.files[0]);
+      importSettingsInput.value = "";
+    });
+    document.addEventListener("keydown", (event) => {
+      const tag = event.target.tagName;
+      if (tag === "INPUT" || tag === "SELECT" || tag === "TEXTAREA" || event.ctrlKey || event.altKey || event.metaKey) {
+        return;
+      }
+      if (/^[1-9]$/.test(event.key)) {
+        applyPattern(Number(event.key));
+      } else if (event.key === "0") {
+        applyPattern(10);
+      }
+    });
+
+    makeGroupRows();
+    if (!loadSavedSettings()) {
+      renderPreview();
+    }
+  </script>
+</body>
+</html>
