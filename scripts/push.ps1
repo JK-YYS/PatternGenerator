@@ -4,34 +4,42 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
+$gitCommand = Get-Command git -ErrorAction SilentlyContinue
+if (-not $gitCommand) {
+  $fallbackGit = "C:\Program Files\Git\cmd\git.exe"
+  if (Test-Path $fallbackGit) {
+    $gitCommand = $fallbackGit
+  }
+}
+
+if (-not $gitCommand) {
   throw "找不到 git。請先安裝 Git for Windows，或確認 git.exe 已加入 PATH。"
 }
 
 if (-not (Test-Path ".git")) {
-  git init
-  git branch -M main
+  & $gitCommand init
+  & $gitCommand branch -M main
 }
 
-$remote = git remote get-url origin 2>$null
+$remote = & $gitCommand remote get-url origin 2>$null
 if (-not $remote) {
   throw "尚未設定 GitHub remote。請先執行：git remote add origin https://github.com/<你的帳號>/<你的repo>.git"
 }
 
-git add .
+& $gitCommand add .
 
-$staged = git diff --cached --name-only
+$staged = & $gitCommand diff --cached --name-only
 if (-not $staged) {
   Write-Host "沒有需要提交的變更。"
   exit 0
 }
 
-git commit -m $Message
+& $gitCommand commit -m $Message
 
-$branch = git branch --show-current
-$upstream = git rev-parse --abbrev-ref --symbolic-full-name "@{u}" 2>$null
+$branch = & $gitCommand branch --show-current
+$upstream = & $gitCommand rev-parse --abbrev-ref --symbolic-full-name "@{u}" 2>$null
 if ($upstream) {
-  git push
+  & $gitCommand push
 } else {
-  git push -u origin $branch
+  & $gitCommand push -u origin $branch
 }
