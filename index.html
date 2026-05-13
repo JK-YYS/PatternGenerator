@@ -3,19 +3,20 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>BMP 灰階分區產生器</title>
+  <title>BMP Pattern Generator</title>
   <style>
     :root {
       color-scheme: light;
-      --bg: #f6f7f9;
-      --panel: #ffffff;
-      --text: #1c2430;
-      --muted: #647084;
-      --line: #d9dee7;
+      --bg: #f4f1ea;
+      --panel: #fffdf8;
+      --panel-alt: #f8f4ec;
+      --text: #1e1f24;
+      --muted: #6c665e;
+      --line: #d7d0c5;
       --accent: #0f766e;
       --accent-dark: #115e59;
       --danger: #b42318;
-      --shadow: 0 14px 34px rgba(28, 36, 48, 0.08);
+      --shadow: 0 16px 36px rgba(41, 32, 22, 0.10);
     }
 
     * {
@@ -27,7 +28,10 @@
       min-height: 100vh;
       font-family: "Segoe UI", "Microsoft JhengHei", system-ui, sans-serif;
       color: var(--text);
-      background: var(--bg);
+      background:
+        radial-gradient(circle at top left, rgba(202, 138, 4, 0.10), transparent 28%),
+        radial-gradient(circle at top right, rgba(15, 118, 110, 0.10), transparent 32%),
+        var(--bg);
     }
 
     button,
@@ -39,7 +43,7 @@
     .app {
       min-height: 100vh;
       display: grid;
-      grid-template-columns: minmax(360px, 440px) minmax(0, 1fr);
+      grid-template-columns: minmax(380px, 460px) minmax(0, 1fr);
     }
 
     .sidebar {
@@ -58,15 +62,15 @@
     }
 
     h1 {
-      margin: 0 0 6px;
-      font-size: 24px;
+      margin: 0 0 8px;
+      font-size: 26px;
       letter-spacing: 0;
     }
 
     .subtext {
       margin: 0 0 24px;
       color: var(--muted);
-      line-height: 1.5;
+      line-height: 1.55;
     }
 
     .section {
@@ -113,6 +117,24 @@
       box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.12);
     }
 
+    .check-label {
+      grid-template-columns: auto 1fr;
+      align-items: center;
+      min-height: 40px;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      color: var(--text);
+      gap: 10px;
+    }
+
+    .check-label input {
+      width: 18px;
+      min-height: 18px;
+      margin: 0;
+    }
+
     .groups {
       display: grid;
       gap: 10px;
@@ -126,7 +148,7 @@
       padding: 12px;
       border: 1px solid var(--line);
       border-radius: 8px;
-      background: #fbfcfd;
+      background: var(--panel-alt);
     }
 
     .badge {
@@ -138,13 +160,6 @@
       color: #fff;
       background: var(--accent);
       font-weight: 700;
-    }
-
-    .actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-top: 18px;
     }
 
     .pattern-grid {
@@ -170,6 +185,13 @@
       line-height: 1.45;
     }
 
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
     button {
       min-height: 42px;
       border: 0;
@@ -177,6 +199,11 @@
       padding: 10px 14px;
       cursor: pointer;
       font-weight: 700;
+      transition: background-color 140ms ease, transform 140ms ease;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
     }
 
     .primary {
@@ -190,11 +217,11 @@
 
     .secondary {
       color: var(--text);
-      background: #e9edf3;
+      background: #ece5d8;
     }
 
     .secondary:hover {
-      background: #dfe5ee;
+      background: #e4dccd;
     }
 
     .status {
@@ -273,10 +300,10 @@
       padding: 18px;
       overflow: auto;
       background:
-        linear-gradient(45deg, #eef1f5 25%, transparent 25%),
-        linear-gradient(-45deg, #eef1f5 25%, transparent 25%),
-        linear-gradient(45deg, transparent 75%, #eef1f5 75%),
-        linear-gradient(-45deg, transparent 75%, #eef1f5 75%);
+        linear-gradient(45deg, #ede8df 25%, transparent 25%),
+        linear-gradient(-45deg, #ede8df 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #ede8df 75%),
+        linear-gradient(-45deg, transparent 75%, #ede8df 75%);
       background-color: #fff;
       background-size: 20px 20px;
       background-position: 0 0, 0 10px, 10px -10px, -10px 0;
@@ -287,11 +314,11 @@
       max-width: 100%;
       height: auto;
       image-rendering: pixelated;
-      border: 1px solid #9aa4b2;
+      border: 1px solid #9c8f7b;
       background: #fff;
     }
 
-    @media (max-width: 920px) {
+    @media (max-width: 960px) {
       .app {
         grid-template-columns: 1fr;
       }
@@ -318,8 +345,8 @@
         grid-template-columns: 1fr;
       }
 
-      .badge {
-        min-height: 34px;
+      .pattern-grid {
+        grid-template-columns: repeat(3, 1fr);
       }
     }
   </style>
@@ -327,19 +354,19 @@
 <body>
   <main class="app">
     <aside class="sidebar">
-      <h1>BMP 灰階分區產生器</h1>
-      <p class="subtext">設定影像尺寸與最多 10 組 line 分區，預覽後可另存為 BMP。</p>
+      <h1>BMP Pattern Generator</h1>
+      <p class="subtext">設定尺寸、灰階分區或 H pattern，預覽後輸出 24-bit 或 32-bit BMP，並支援 flip / mirror。</p>
 
       <div class="section">
         <h2 class="section-title">影像設定</h2>
         <div class="grid">
           <label>
             高度
-            <input id="heightInput" type="number" min="1" max="20000" step="1" value="2400">
+            <input id="heightInput" type="number" min="1" max="20000" step="1" value="2412">
           </label>
           <label>
             寬度
-            <input id="widthInput" type="number" min="1" max="20000" step="1" value="1200">
+            <input id="widthInput" type="number" min="1" max="20000" step="1" value="1080">
           </label>
         </div>
         <div class="grid" style="margin-top: 12px;">
@@ -347,6 +374,25 @@
             分區組數
             <select id="groupCount"></select>
           </label>
+          <label>
+            BMP Bits
+            <select id="bitDepthInput">
+              <option value="24" selected>24 bits</option>
+              <option value="32">32 bits</option>
+            </select>
+          </label>
+        </div>
+        <div class="grid" style="margin-top: 12px;">
+          <label class="check-label">
+            <input id="flipInput" type="checkbox">
+            Flip 上下翻轉
+          </label>
+          <label class="check-label">
+            <input id="mirrorInput" type="checkbox">
+            Mirror 左右翻轉
+          </label>
+        </div>
+        <div class="grid" style="margin-top: 12px;">
           <label>
             檔名
             <input id="fileName" type="text" value="grayscale-zones.bmp" maxlength="80">
@@ -362,7 +408,7 @@
       <div class="section">
         <h2 class="section-title">H Pattern 快捷鍵</h2>
         <div id="patternButtons" class="pattern-grid"></div>
-        <p class="hint">按鍵盤 1-9 或 0 可快速套用 1H-10H；輸入欄位聚焦時不會觸發。</p>
+        <p class="hint">按鍵盤 1-9 或 0 可快速套用 1H-10H。輸入欄位聚焦時不會觸發。</p>
       </div>
 
       <div class="actions">
@@ -379,8 +425,8 @@
 
     <section class="workspace">
       <div class="summary">
-        <div class="metric"><span>Line 範圍</span><strong id="lineRange">0 - 2399</strong></div>
-        <div class="metric"><span>X 範圍</span><strong id="xRange">0 - 1199</strong></div>
+        <div class="metric"><span>Line 範圍</span><strong id="lineRange">0 - 2411</strong></div>
+        <div class="metric"><span>X 範圍</span><strong id="xRange">0 - 1079</strong></div>
         <div class="metric"><span>已覆蓋 Lines</span><strong id="coveredLines">0</strong></div>
         <div class="metric"><span>輸出大小</span><strong id="outputSize">-</strong></div>
       </div>
@@ -388,18 +434,25 @@
       <div class="preview-panel">
         <div class="preview-head">
           <h2 class="preview-title">預覽</h2>
-          <span class="preview-note">縮放顯示，輸出會使用完整解析度</span>
+          <span class="preview-note">縮放顯示，輸出會使用完整解析度與翻轉設定</span>
         </div>
         <div class="canvas-wrap">
-          <canvas id="previewCanvas" width="1200" height="2400"></canvas>
+          <canvas id="previewCanvas" width="1080" height="2412"></canvas>
         </div>
       </div>
     </section>
   </main>
 
   <script>
+    const defaultHeight = 2412;
+    const defaultWidth = 1080;
+    const settingsKey = "bmp-grayscale-zone-settings-v3";
+
     const heightInput = document.getElementById("heightInput");
     const widthInput = document.getElementById("widthInput");
+    const bitDepthInput = document.getElementById("bitDepthInput");
+    const flipInput = document.getElementById("flipInput");
+    const mirrorInput = document.getElementById("mirrorInput");
     const groupCount = document.getElementById("groupCount");
     const groupsEl = document.getElementById("groups");
     const patternButtons = document.getElementById("patternButtons");
@@ -413,7 +466,7 @@
     const statusEl = document.getElementById("status");
     const fileNameInput = document.getElementById("fileName");
     const canvas = document.getElementById("previewCanvas");
-    const ctx = canvas.getContext("2d", { willReadFrequently: false });
+    const ctx = canvas.getContext("2d");
 
     const lineRangeEl = document.getElementById("lineRange");
     const xRangeEl = document.getElementById("xRange");
@@ -423,7 +476,6 @@
     let lastImageData = null;
     let lastConfig = null;
     let activePatternH = null;
-    const settingsKey = "bmp-grayscale-zone-settings-v2";
 
     for (let i = 1; i <= 10; i += 1) {
       const option = document.createElement("option");
@@ -447,6 +499,31 @@
       const parsed = Number.parseInt(value, 10);
       if (!Number.isFinite(parsed)) return fallback;
       return Math.min(max, Math.max(min, parsed));
+    }
+
+    function getBitDepth() {
+      return clampInt(bitDepthInput.value, 24, 32, 24) === 32 ? 32 : 24;
+    }
+
+    function defaultGray(index, count) {
+      if (count === 1) return 128;
+      return Math.round((255 * index) / (count - 1));
+    }
+
+    function defaultStep(index, count) {
+      const height = clampInt(heightInput.value, 1, 20000, defaultHeight);
+      const base = Math.floor(height / count);
+      const remainder = height % count;
+      return base + (index < remainder ? 1 : 0);
+    }
+
+    function readGroups(normalize = true) {
+      const grayInputs = Array.from(document.querySelectorAll(".gray-input"));
+      const stepInputs = Array.from(document.querySelectorAll(".step-input"));
+      return grayInputs.map((input, index) => ({
+        gray: normalize ? clampInt(input.value, 0, 255, 0) : input.value,
+        step: normalize ? clampInt(stepInputs[index].value, 1, 20000, 1) : stepInputs[index].value
+      }));
     }
 
     function makeGroupRows() {
@@ -473,31 +550,13 @@
       }
     }
 
-    function defaultGray(index, count) {
-      if (count === 1) return 128;
-      return Math.round((255 * index) / (count - 1));
-    }
-
-    function defaultStep(index, count) {
-      const height = clampInt(heightInput.value, 1, 20000, 2400);
-      const base = Math.floor(height / count);
-      const remainder = height % count;
-      return base + (index < remainder ? 1 : 0);
-    }
-
-    function readGroups(normalize = true) {
-      const grayInputs = Array.from(document.querySelectorAll(".gray-input"));
-      const stepInputs = Array.from(document.querySelectorAll(".step-input"));
-      return grayInputs.map((input, index) => ({
-        gray: normalize ? clampInt(input.value, 0, 255, 0) : input.value,
-        step: normalize ? clampInt(stepInputs[index].value, 1, 20000, 1) : stepInputs[index].value
-      }));
-    }
-
     function readSettings() {
       return {
-        height: clampInt(heightInput.value, 1, 20000, 2400),
-        width: clampInt(widthInput.value, 1, 20000, 1200),
+        height: clampInt(heightInput.value, 1, 20000, defaultHeight),
+        width: clampInt(widthInput.value, 1, 20000, defaultWidth),
+        bitDepth: getBitDepth(),
+        flip: flipInput.checked,
+        mirror: mirrorInput.checked,
         groupCount: clampInt(groupCount.value, 1, 10, 1),
         fileName: fileNameInput.value,
         activePatternH,
@@ -507,13 +566,18 @@
 
     function applySettings(settings) {
       if (!settings || typeof settings !== "object") return;
-      heightInput.value = String(clampInt(settings.height, 1, 20000, 2400));
-      widthInput.value = String(clampInt(settings.width, 1, 20000, 1200));
+
+      heightInput.value = String(clampInt(settings.height, 1, 20000, defaultHeight));
+      widthInput.value = String(clampInt(settings.width, 1, 20000, defaultWidth));
+      bitDepthInput.value = clampInt(settings.bitDepth, 24, 32, 24) === 32 ? "32" : "24";
+      flipInput.checked = Boolean(settings.flip);
+      mirrorInput.checked = Boolean(settings.mirror);
       groupCount.value = String(clampInt(settings.groupCount, 1, 10, 1));
       fileNameInput.value = typeof settings.fileName === "string" ? settings.fileName : "grayscale-zones.bmp";
       activePatternH = settings.activePatternH === null || settings.activePatternH === undefined
         ? null
         : clampInt(settings.activePatternH, 1, 10, 1);
+
       makeGroupRows();
 
       if (Array.isArray(settings.groups)) {
@@ -582,8 +646,11 @@
     }
 
     function validateConfig() {
-      const height = clampInt(heightInput.value, 1, 20000, 2400);
-      const width = clampInt(widthInput.value, 1, 20000, 1200);
+      const height = clampInt(heightInput.value, 1, 20000, defaultHeight);
+      const width = clampInt(widthInput.value, 1, 20000, defaultWidth);
+      const bitDepth = getBitDepth();
+      const flip = flipInput.checked;
+      const mirror = mirrorInput.checked;
       const groups = readGroups(true);
       const totalStep = activePatternH ? height : groups.reduce((sum, group) => sum + group.step, 0);
 
@@ -600,6 +667,9 @@
           message: `Step 總和 ${totalStep} 超過高度 ${height}。`,
           height,
           width,
+          bitDepth,
+          flip,
+          mirror,
           groups,
           activePatternH,
           totalStep
@@ -610,6 +680,9 @@
         ok: true,
         height,
         width,
+        bitDepth,
+        flip,
+        mirror,
         groups,
         activePatternH,
         totalStep
@@ -617,16 +690,40 @@
     }
 
     function updateMetrics(config) {
-      const height = config?.height || clampInt(heightInput.value, 1, 20000, 2400);
-      const width = config?.width || clampInt(widthInput.value, 1, 20000, 1200);
+      const height = config?.height || clampInt(heightInput.value, 1, 20000, defaultHeight);
+      const width = config?.width || clampInt(widthInput.value, 1, 20000, defaultWidth);
+      const bitDepth = config?.bitDepth || getBitDepth();
       const totalStep = config?.totalStep || 0;
-      const rowSize = Math.floor((24 * width + 31) / 32) * 4;
+      const rowSize = Math.floor((bitDepth * width + 31) / 32) * 4;
       const fileSize = 54 + rowSize * height;
 
       lineRangeEl.textContent = `0 - ${height - 1}`;
       xRangeEl.textContent = `0 - ${width - 1}`;
       coveredLinesEl.textContent = `${totalStep} / ${height}`;
-      outputSizeEl.textContent = formatBytes(fileSize);
+      outputSizeEl.textContent = `${formatBytes(fileSize)} / ${bitDepth} bits`;
+    }
+
+    function transformImageData(imageData, width, height, flip, mirror) {
+      if (!flip && !mirror) return imageData;
+
+      const transformed = new ImageData(width, height);
+      const source = imageData.data;
+      const target = transformed.data;
+
+      for (let y = 0; y < height; y += 1) {
+        const sourceY = flip ? height - 1 - y : y;
+        for (let x = 0; x < width; x += 1) {
+          const sourceX = mirror ? width - 1 - x : x;
+          const sourceOffset = (sourceY * width + sourceX) * 4;
+          const targetOffset = (y * width + x) * 4;
+          target[targetOffset] = source[sourceOffset];
+          target[targetOffset + 1] = source[sourceOffset + 1];
+          target[targetOffset + 2] = source[sourceOffset + 2];
+          target[targetOffset + 3] = source[sourceOffset + 3];
+        }
+      }
+
+      return transformed;
     }
 
     function renderPreview() {
@@ -640,7 +737,7 @@
         return false;
       }
 
-      const { width, height, groups } = config;
+      const { width, height, groups, flip, mirror } = config;
       canvas.width = width;
       canvas.height = height;
       const imageData = ctx.createImageData(width, height);
@@ -686,8 +783,10 @@
         }
       }
 
-      ctx.putImageData(imageData, 0, 0);
-      lastImageData = imageData;
+      const transformed = transformImageData(imageData, width, height, flip, mirror);
+      ctx.putImageData(transformed, 0, 0);
+
+      lastImageData = transformed;
       lastConfig = config;
       statusEl.textContent = activePatternH
         ? `預覽已更新：${activePatternH}H pattern。`
@@ -714,8 +813,9 @@
       });
     }
 
-    function createBmpBlob(imageData, width, height) {
-      const rowSize = Math.floor((24 * width + 31) / 32) * 4;
+    function createBmpBlob(imageData, width, height, bitDepth) {
+      const bytesPerPixel = bitDepth === 32 ? 4 : 3;
+      const rowSize = Math.floor((bitDepth * width + 31) / 32) * 4;
       const pixelArraySize = rowSize * height;
       const fileSize = 54 + pixelArraySize;
       const buffer = new ArrayBuffer(fileSize);
@@ -730,7 +830,7 @@
       view.setInt32(18, width, true);
       view.setInt32(22, height, true);
       view.setUint16(26, 1, true);
-      view.setUint16(28, 24, true);
+      view.setUint16(28, bitDepth, true);
       view.setUint32(34, pixelArraySize, true);
       view.setInt32(38, 2835, true);
       view.setInt32(42, 2835, true);
@@ -745,7 +845,10 @@
           bytes[targetOffset] = source[sourceOffset + 2];
           bytes[targetOffset + 1] = source[sourceOffset + 1];
           bytes[targetOffset + 2] = source[sourceOffset];
-          targetOffset += 3;
+          if (bitDepth === 32) {
+            bytes[targetOffset + 3] = source[sourceOffset + 3];
+          }
+          targetOffset += bytesPerPixel;
         }
         targetOffset = 54 + (height - y) * rowSize;
       }
@@ -755,9 +858,10 @@
 
     async function saveBmp() {
       if (!renderPreview()) return;
-      const { width, height } = lastConfig;
-      const blob = createBmpBlob(lastImageData, width, height);
+      const { width, height, bitDepth } = lastConfig;
+      const blob = createBmpBlob(lastImageData, width, height, bitDepth);
       const name = normalizeFileName(fileNameInput.value);
+
       if (window.bmpApp?.saveBmpFile) {
         const result = await window.bmpApp.saveBmpFile(name, await blob.arrayBuffer());
         statusEl.textContent = result.canceled ? "已取消另存 BMP。" : `已建立 ${result.filePath}。`;
@@ -791,26 +895,35 @@
       makeGroupRows();
       renderPreview();
     });
+
     heightInput.addEventListener("change", () => {
       makeGroupRows();
       renderPreview();
     });
+
     widthInput.addEventListener("change", renderPreview);
+    bitDepthInput.addEventListener("change", renderPreview);
+    flipInput.addEventListener("change", renderPreview);
+    mirrorInput.addEventListener("change", renderPreview);
     groupsEl.addEventListener("input", renderPreview);
+
     patternButtons.addEventListener("click", (event) => {
       const button = event.target.closest("button[data-h]");
       if (button) applyPattern(button.dataset.h);
     });
+
     renderBtn.addEventListener("click", renderPreview);
     saveBtn.addEventListener("click", saveBmp);
     saveSettingsBtn.addEventListener("click", () => saveSettings(true));
     exportSettingsBtn.addEventListener("click", exportSettings);
     importSettingsBtn.addEventListener("click", () => importSettingsInput.click());
     clearPatternBtn.addEventListener("click", clearPattern);
+
     importSettingsInput.addEventListener("change", () => {
       importSettings(importSettingsInput.files[0]);
       importSettingsInput.value = "";
     });
+
     document.addEventListener("keydown", (event) => {
       const tag = event.target.tagName;
       if (tag === "INPUT" || tag === "SELECT" || tag === "TEXTAREA" || event.ctrlKey || event.altKey || event.metaKey) {
